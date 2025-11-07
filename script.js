@@ -417,3 +417,37 @@ function hideLoading(sectionId) {
     btn.disabled = false;
     btn.textContent = 'Load Conversations';
 }
+
+function openInBrowser() {
+    if (messages.length === 0) return;
+
+    let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(getConvoName(currentConversation)) + '</title>';
+    html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e4e4e7;}';
+    html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:15px;margin-bottom:15px;}';
+    html += '.author{font-weight:600;color:#fff;margin-bottom:5px;}.time{color:#71717a;font-size:0.85rem;margin-bottom:10px;}';
+    html += '.content{line-height:1.6;color:#d4d4d8;}.attachment{color:#a1a1aa;text-decoration:none;}</style></head><body>';
+    html += '<h1>' + escapeHtml(getConvoName(currentConversation)) + '</h1>';
+    html += '<p style="color:#71717a;">Opened in Browser (Cached Local Export)</p><hr>';
+
+    messages.forEach(function(msg) {
+        html += '<div class="message">';
+        html += '<div class="author">' + escapeHtml(msg.author.username) + '</div>';
+        html += '<div class="time">' + formatTimestamp(msg.timestamp) + '</div>';
+        html += '<div class="content">' + escapeHtml(msg.content).replace(/\n/g, '<br>') + '</div>';
+
+        if (msg.attachments && msg.attachments.length > 0) {
+            msg.attachments.forEach(function(att) {
+                html += '<div><a class="attachment" href="' + att.url + '" target="_blank">Attachment: ' + escapeHtml(att.filename) + '</a></div>';
+            });
+        }
+
+        html += '</div>';
+    });
+
+    html += '</body></html>';
+
+    // Create a Blob URL and open it in a new browser tab
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+}
