@@ -132,6 +132,15 @@ input::placeholder {
     cursor: not-allowed;
 }
 
+.btn-accent {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.btn-accent:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
 .error {
     color: #ef4444;
     margin-top: 1rem;
