@@ -3,104 +3,103 @@
 <head>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/apexcharts@3.40.0/dist/apexcharts.min.js"></script>
 <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.40.0/dist/apexcharts.min.css"/>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord DM Exporter</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discord DM Exporter</title>
+<link rel="stylesheet" href="style.css">
 
-        <!-- Open Graph / Discord Embed -->
-    <meta property="og:title" content="Discord DM Exporter">
-    <meta property="og:description" content="Export and archive your Discord direct messages easily. Built by @wyobuvzz aka dealer">
-    <meta property="og:url" content="https://discordchat.vercel.app/">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://discordchat.vercel.app/preview.png">
-    <meta name="theme-color" content="#064e3b">
+<!-- Open Graph / Discord Embed -->
+<meta property="og:title" content="Discord DM Exporter">
+<meta property="og:description" content="Export and archive your Discord direct messages easily. Built by @wyobuvzz aka dealer">
+<meta property="og:url" content="https://discordchat.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://discordchat.vercel.app/preview.png">
+<meta name="theme-color" content="#064e3b">
 
-    <!-- Twitter Embed (optional but good practice) -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Discord DM Exporter">
-    <meta name="twitter:description" content="Export and archive your Discord direct messages easily.">
-    <meta name="twitter:image" content="https://discordchat.vercel.app/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Discord DM Exporter">
+<meta name="twitter:description" content="Export and archive your Discord direct messages easily.">
+<meta name="twitter:image" content="https://discordchat.vercel.app/preview.png">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Discord DM Exporter By dealer</h1>
-            <p>Export and archive your direct messages | add me on discord at "buvzz"</p>
-        </div>
-
-        <div id="tokenSection" class="card token-section">
-            <div class="form-group">
-                <label for="tokenInput">Discord User Token</label>
-                <input type="password" id="tokenInput" placeholder="Enter your Discord user token">
-                <span class="help-text">Your token is stored locally and never sent anywhere except Discord's API</span>
-            </div>
-            <button class="btn btn-primary" onclick="loadConversations()">Load Conversations</button>
-            <div id="tokenError" class="error hidden"></div>
-        </div>
-
-        <div id="conversationsSection" class="card hidden">
-            <div class="conversations-header">
-                <h2>Direct Messages</h2>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search conversations..." oninput="filterConversations()">
-                </div>
-            </div>
-            <div class="filter-tabs">
-                <button class="tab-btn active" onclick="setFilter('all')">All DMs</button>
-                <button class="tab-btn" onclick="setFilter('dm')">1-on-1</button>
-                <button class="tab-btn" onclick="setFilter('group')">Group DMs</button>
-            </div>
-            <div id="conversationsList" class="conversations-list"></div>
-        </div>
-
-        <div id="messagesSection" class="card hidden">
-            <div class="messages-header">
-                <div class="header-left">
-                    <button class="back-btn" onclick="backToConversations()">
-                        <span>←</span> Back
-                    </button>
-                    <div class="conversation-header-info">
-                        <h2 id="conversationTitle"></h2>
-                        <span id="messageCount" class="message-count"></span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="exportAsText()">Export as TXT</button>
-                    <button class="btn btn-secondary" onclick="exportAsHTML()">Export as HTML</button>
-                    <button class="btn btn-success" onclick="downloadConversation()">Export as JSON</button>
-                </div>
-            </div>
-            <div class="messages-controls">
-                <input type="text" id="messageSearch" placeholder="Search messages..." oninput="searchMessages()">
-                <select id="sortOrder" onchange="changeSortOrder()">
-                    <option value="asc">Oldest First</option>
-                    <option value="desc">Newest First</option>
-                </select>
-            </div>
-            <div id="messagesContainer" class="messages-container"></div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>Discord DM Exporter By dealer</h1>
+      <p>Export and archive your direct messages | add me on discord at "buvzz"</p>
     </div>
 
-    <script src="script.js"></script>
+    <div id="tokenSection" class="card token-section">
+      <div class="form-group">
+        <label for="tokenInput">Discord User Token</label>
+        <input type="password" id="tokenInput" placeholder="Enter your Discord user token">
+        <span class="help-text">Your token is stored locally and never sent anywhere except Discord's API</span>
+      </div>
+      <button class="btn btn-primary" onclick="loadConversations()">Load Conversations</button>
+      <div id="tokenError" class="error hidden"></div>
+    </div>
 
-        <!-- footer with your links -->
-    <footer class="site-footer card" style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <strong>Discord DM Exporter</strong>
-            <div style="color:#9ca3af; font-size:.9rem;">Export and archive your direct messages</div>
+    <div id="conversationsSection" class="card hidden">
+      <div class="conversations-header">
+        <h2>Direct Messages</h2>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search conversations..." oninput="filterConversations()">
         </div>
+      </div>
+      <div class="filter-tabs">
+        <button class="tab-btn active" onclick="setFilter('all')">All DMs</button>
+        <button class="tab-btn" onclick="setFilter('dm')">1-on-1</button>
+        <button class="tab-btn" onclick="setFilter('group')">Group DMs</button>
+      </div>
+      <div id="conversationsList" class="conversations-list"></div>
+    </div>
 
-        <div style="display:flex; gap:0.75rem; align-items:center;">
-            <a href="https://buymeacoffee.com/dabsteprbxf" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:0.5rem 0.75rem;">
-                Buy me a coffee
-            </a>
-
-            <a href="https://youtube.com/@wyobuvzz" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:0.5rem 0.75rem;">
-                YouTube
-            </a>
+    <div id="messagesSection" class="card hidden">
+      <div class="messages-header">
+        <div class="header-left">
+          <button class="back-btn" onclick="backToConversations()">
+            <span>←</span> Back
+          </button>
+          <div class="conversation-header-info">
+            <h2 id="conversationTitle"></h2>
+            <span id="messageCount" class="message-count"></span>
+          </div>
         </div>
-    </footer>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="exportAsText()">Export as TXT</button>
+          <button class="btn btn-secondary" onclick="exportAsHTML()">Export as HTML</button>
+          <button class="btn btn-success" onclick="downloadConversation()">Export as JSON</button>
+          <button class="btn btn-accent" onclick="openInBrowser()">Open in Browser</button>
+        </div>
+      </div>
 
+      <div class="messages-controls">
+        <input type="text" id="messageSearch" placeholder="Search messages..." oninput="searchMessages()">
+        <select id="sortOrder" onchange="changeSortOrder()">
+          <option value="asc">Oldest First</option>
+          <option value="desc">Newest First</option>
+        </select>
+      </div>
+
+      <div id="messagesContainer" class="messages-container"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+  <footer class="site-footer card" style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <strong>Discord DM Exporter</strong>
+      <div style="color:#9ca3af; font-size:.9rem;">Export and archive your direct messages</div>
+    </div>
+
+    <div style="display:flex; gap:0.75rem; align-items:center;">
+      <a href="https://buymeacoffee.com/dabsteprbxf" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:0.5rem 0.75rem;">
+        Buy me a coffee
+      </a>
+      <a href="https://youtube.com/@wyobuvzz" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:0.5rem 0.75rem;">
+        YouTube
+      </a>
+    </div>
+  </footer>
 </body>
 </html>
