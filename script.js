@@ -418,36 +418,71 @@ function hideLoading(sectionId) {
     btn.textContent = 'Load Conversations';
 }
 
-function openInBrowser() {
-    if (messages.length === 0) return;
+async function openInBrowser() {
+  if (messages.length === 0) return alert('No messages to open.');
 
-    let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(getConvoName(currentConversation)) + '</title>';
-    html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e4e4e7;}';
-    html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:15px;margin-bottom:15px;}';
-    html += '.author{font-weight:600;color:#fff;margin-bottom:5px;}.time{color:#71717a;font-size:0.85rem;margin-bottom:10px;}';
-    html += '.content{line-height:1.6;color:#d4d4d8;}.attachment{color:#a1a1aa;text-decoration:none;}</style></head><body>';
-    html += '<h1>' + escapeHtml(getConvoName(currentConversation)) + '</h1>';
-    html += '<p style="color:#71717a;">Opened in Browser (Cached Local Export)</p><hr>';
+  // Build the HTML export (same styling/structure you use)
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' +
+    escapeHtml(getConvoName(currentConversation)) +
+    '</title>';
+  html += '<meta name="viewport" content="width=device-width,initial-scale=1">';
+  html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:18px;background:#0a0a0a;color:#e4e4e7;}';
+  html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px;margin-bottom:12px;}';
+  html += '.author{font-weight:600;color:#fff;margin-bottom:4px}.time{color:#71717a;font-size:0.85rem;margin-bottom:8px}.content{line-height:1.5;color:#d4d4d8;white-space:pre-wrap}';
+  html += '.attachment{color:#a1a1aa;text-decoration:none;display:inline-block;margin-top:6px;padding:6px;border-radius:6px;background:#27272a}</style>';
+  html += '</head><body>';
+  html += '<h1>' + escapeHtml(getConvoName(currentConversation)) + '</h1>';
+  html += '<p style="color:#71717a;margin-bottom:12px;">Shareable export — anyone with this link can view it.</p><hr>';
 
-    messages.forEach(function(msg) {
-        html += '<div class="message">';
-        html += '<div class="author">' + escapeHtml(msg.author.username) + '</div>';
-        html += '<div class="time">' + formatTimestamp(msg.timestamp) + '</div>';
-        html += '<div class="content">' + escapeHtml(msg.content).replace(/\n/g, '<br>') + '</div>';
+  for (const msg of messages) {
+    html += '<div class="message">';
+    html += '<div class="author">' + escapeHtml(msg.author.username) + '</div>';
+    html += '<div class="time">' + formatTimestamp(msg.timestamp) + '</div>';
+    html += '<div class="content">' + escapeHtml(msg.content || '') + '</div>';
 
-        if (msg.attachments && msg.attachments.length > 0) {
-            msg.attachments.forEach(function(att) {
-                html += '<div><a class="attachment" href="' + att.url + '" target="_blank">Attachment: ' + escapeHtml(att.filename) + '</a></div>';
-            });
-        }
+    if (msg.attachments && msg.attachments.length) {
+      for (const att of msg.attachments) {
+        html += '<div><a class="attachment" href="' + att.url + '" target="_blank" rel="noopener noreferrer">Attachment: ' +
+                escapeHtml(att.filename) + '</a></div>';
+      }
+    }
+    html += '</div>';
+  }
 
-        html += '</div>';
-    });
+  html += '</body></html>';
 
-    html += '</body></html>';
+  // Helper: base64 encode safely (handles unicode)
+  function base64EncodeUnicode(str) {
+    // encodeURIComponent -> percent-encoded UTF-8, then convert percent encodings to raw bytes, then btoa
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+      function(match, p1) { return String.fromCharCode('0x' + p1); }));
+  }
 
-    // Create a Blob URL and open it in a new browser tab
-    const blob = new Blob([html], { type: 'text/html' });
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+  try {
+    const base64 = base64EncodeUnicode(html);
+    const dataUrl = 'data:text/html;base64,' + base64;
+
+    // Attempt to open the data URL in a new tab
+    const newTab = window.open(dataUrl, '_blank');
+
+    // If popup blocked, at least copy the link and show it to the user
+    try {
+      await navigator.clipboard.writeText(dataUrl);
+      // Inform user: link copied
+      if (newTab) {
+        // focus the new tab (if allowed)
+        newTab.focus();
+        alert('Opened export in a new tab and copied the shareable link to clipboard.\n\nWarning: link can be very large.');
+      } else {
+        // popup blocked
+        alert('Popup blocked. The shareable data URL was copied to your clipboard. Paste it into a new tab to open it.');
+      }
+    } catch (copyErr) {
+      // clipboard may fail in some contexts — fall back to prompt
+      window.prompt('Copy this shareable URL (anyone with it can view the export):', dataUrl);
+    }
+  } catch (err) {
+    console.error('Failed to create shareable data URL:', err);
+    alert('Failed to build shareable link. The export may be too large for a data URL. Consider downloading the HTML or uploading to a paste service.');
+  }
 }
