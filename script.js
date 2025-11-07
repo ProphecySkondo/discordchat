@@ -418,57 +418,23 @@ function hideLoading(sectionId) {
     btn.textContent = 'Load Conversations';
 }
 
-function openInBrowser() {
-  if (messages.length === 0) return alert("No messages to export.");
+async function openInBrowser() {
+  if (messages.length === 0) return alert('No messages to export.');
 
-  // Generate a fake but realistic "longish" link token
-  const fakeId = crypto.randomUUID().replace(/-/g, '') + Math.random().toString(36).slice(2, 10);
+  const convoName = getConvoName(currentConversation) || 'conversation';
+  const dmid = currentConversation.id || Math.random().toString(36).substring(2, 10);
 
-  // Build the export HTML (same as your HTML export)
-  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(getConvoName(currentConversation)) + '</title>';
-  html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e4e4e7;}';
-  html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:15px;margin-bottom:15px;}';
-  html += '.author{font-weight:600;color:#fff;margin-bottom:5px;}.time{color:#71717a;font-size:0.85rem;margin-bottom:10px;}';
-  html += '.content{line-height:1.6;color:#d4d4d8;white-space:pre-wrap;}.attachment{color:#a1a1aa;text-decoration:none;}</style>';
-  html += '</head><body>';
-  html += '<h1>' + escapeHtml(getConvoName(currentConversation)) + '</h1>';
-  html += '<p style="color:#71717a;">Shareable export — anyone with this link can view it (local only for now).</p><hr>';
+  const shareableUrl = `${self.location.origin}/${encodeURIComponent(convoName)}/${encodeURIComponent(dmid)}`;
 
-  messages.forEach(msg => {
-    html += '<div class="message">';
-    html += '<div class="author">' + escapeHtml(msg.author.username) + '</div>';
-    html += '<div class="time">' + formatTimestamp(msg.timestamp) + '</div>';
-    html += '<div class="content">' + escapeHtml(msg.content || '') + '</div>';
-    if (msg.attachments && msg.attachments.length) {
-      msg.attachments.forEach(att => {
-        html += '<div><a class="attachment" href="' + att.url + '" target="_blank">Attachment: ' + escapeHtml(att.filename) + '</a></div>';
-      });
-    }
-    html += '</div>';
-  });
+  // Open in new tab
+  window.open(shareableUrl, '_blank');
 
-  html += '</body></html>';
-
-  // Convert HTML to a Blob and create a local URL
-  const blob = new Blob([html], { type: 'text/html' });
-  const blobUrl = URL.createObjectURL(blob);
-
-  // Pretend it's a long, legit URL (looks shareable)
-  const shareUrl = `https://discordchat.vercel.app/export/${fakeId}`;
-
-  // Store a mapping locally (so that link opens correct blob)
-  localStorage.setItem(shareUrl, blobUrl);
-
-  // Open the "fake" URL in a new tab — intercepted below
-  window.open(shareUrl, '_blank');
+  // Copy to clipboard
+  try {
+    await navigator.clipboard.writeText(shareableUrl);
+    alert('Shareable link opened and copied to clipboard!');
+  } catch {
+    window.prompt('Copy this shareable link:', shareableUrl);
+  }
 }
 
-// Optional: intercept opening of fake "share" links when used locally
-window.addEventListener('load', () => {
-  const path = window.location.href;
-  const blobUrl = localStorage.getItem(path);
-  if (blobUrl) {
-    // Redirect to the actual blob data
-    window.location.replace(blobUrl);
-  }
-});
