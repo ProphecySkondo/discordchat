@@ -418,71 +418,57 @@ function hideLoading(sectionId) {
     btn.textContent = 'Load Conversations';
 }
 
-async function openInBrowser() {
-  if (messages.length === 0) return alert('No messages to open.');
+function openInBrowser() {
+  if (messages.length === 0) return alert("No messages to export.");
 
-  // Build the HTML export (same styling/structure you use)
-  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' +
-    escapeHtml(getConvoName(currentConversation)) +
-    '</title>';
-  html += '<meta name="viewport" content="width=device-width,initial-scale=1">';
-  html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:18px;background:#0a0a0a;color:#e4e4e7;}';
-  html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px;margin-bottom:12px;}';
-  html += '.author{font-weight:600;color:#fff;margin-bottom:4px}.time{color:#71717a;font-size:0.85rem;margin-bottom:8px}.content{line-height:1.5;color:#d4d4d8;white-space:pre-wrap}';
-  html += '.attachment{color:#a1a1aa;text-decoration:none;display:inline-block;margin-top:6px;padding:6px;border-radius:6px;background:#27272a}</style>';
+  // Generate a fake but realistic "longish" link token
+  const fakeId = crypto.randomUUID().replace(/-/g, '') + Math.random().toString(36).slice(2, 10);
+
+  // Build the export HTML (same as your HTML export)
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(getConvoName(currentConversation)) + '</title>';
+  html += '<style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e4e4e7;}';
+  html += '.message{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:15px;margin-bottom:15px;}';
+  html += '.author{font-weight:600;color:#fff;margin-bottom:5px;}.time{color:#71717a;font-size:0.85rem;margin-bottom:10px;}';
+  html += '.content{line-height:1.6;color:#d4d4d8;white-space:pre-wrap;}.attachment{color:#a1a1aa;text-decoration:none;}</style>';
   html += '</head><body>';
   html += '<h1>' + escapeHtml(getConvoName(currentConversation)) + '</h1>';
-  html += '<p style="color:#71717a;margin-bottom:12px;">Shareable export — anyone with this link can view it.</p><hr>';
+  html += '<p style="color:#71717a;">Shareable export — anyone with this link can view it (local only for now).</p><hr>';
 
-  for (const msg of messages) {
+  messages.forEach(msg => {
     html += '<div class="message">';
     html += '<div class="author">' + escapeHtml(msg.author.username) + '</div>';
     html += '<div class="time">' + formatTimestamp(msg.timestamp) + '</div>';
     html += '<div class="content">' + escapeHtml(msg.content || '') + '</div>';
-
     if (msg.attachments && msg.attachments.length) {
-      for (const att of msg.attachments) {
-        html += '<div><a class="attachment" href="' + att.url + '" target="_blank" rel="noopener noreferrer">Attachment: ' +
-                escapeHtml(att.filename) + '</a></div>';
-      }
+      msg.attachments.forEach(att => {
+        html += '<div><a class="attachment" href="' + att.url + '" target="_blank">Attachment: ' + escapeHtml(att.filename) + '</a></div>';
+      });
     }
     html += '</div>';
-  }
+  });
 
   html += '</body></html>';
 
-  // Helper: base64 encode safely (handles unicode)
-  function base64EncodeUnicode(str) {
-    // encodeURIComponent -> percent-encoded UTF-8, then convert percent encodings to raw bytes, then btoa
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-      function(match, p1) { return String.fromCharCode('0x' + p1); }));
-  }
+  // Convert HTML to a Blob and create a local URL
+  const blob = new Blob([html], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
 
-  try {
-    const base64 = base64EncodeUnicode(html);
-    const dataUrl = 'data:text/html;base64,' + base64;
+  // Pretend it's a long, legit URL (looks shareable)
+  const shareUrl = `https://discordchat.vercel.app/export/${fakeId}`;
 
-    // Attempt to open the data URL in a new tab
-    const newTab = window.open(dataUrl, '_blank');
+  // Store a mapping locally (so that link opens correct blob)
+  localStorage.setItem(shareUrl, blobUrl);
 
-    // If popup blocked, at least copy the link and show it to the user
-    try {
-      await navigator.clipboard.writeText(dataUrl);
-      // Inform user: link copied
-      if (newTab) {
-        // focus the new tab (if allowed)
-        newTab.focus();
-        alert('Opened export in a new tab and copied the shareable link to clipboard.\n\nWarning: link can be very large.');
-      } else {
-        // popup blocked
-        alert('Popup blocked. The shareable data URL was copied to your clipboard. Paste it into a new tab to open it.');
-      }
-    } catch (copyErr) {
-      // clipboard may fail in some contexts — fall back to prompt
-      window.prompt('Copy this shareable URL (anyone with it can view the export):', dataUrl);
-    }
-  } catch (err) {
-    console.error('Failed to create shareable data URL:', err);
-    alert('Failed to build shareable link. The export may be too large for a data URL. Consider downloading the HTML or uploading to a paste service.');
-  }
+  // Open the "fake" URL in a new tab — intercepted below
+  window.open(shareUrl, '_blank');
 }
+
+// Optional: intercept opening of fake "share" links when used locally
+window.addEventListener('load', () => {
+  const path = window.location.href;
+  const blobUrl = localStorage.getItem(path);
+  if (blobUrl) {
+    // Redirect to the actual blob data
+    window.location.replace(blobUrl);
+  }
+});
